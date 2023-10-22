@@ -9,10 +9,10 @@ class Program
         => CommandLineApplication.Execute<Program>(args);
     [Option(ShortName = "i")]
     public string inputFile { get; set; }
-        //= @"C:\Users\golub\source\lessons\multiplat\pract1\pract1\INPUT.txt";
+       
     [Option(ShortName = "o")]
     public string outputFile { get; set; }
-        //= @"C:\Users\golub\source\lessons\multiplat\pract1\pract1\OUTPUT.txt";
+      
     
     static string changeSymToNum(string scenario)
     {
@@ -109,93 +109,104 @@ class Program
 
     void OnExecute()
     {
-        int maxNumbers = 3;
-
-        List<int> numbers = new List<int>(); // basic points
-        List<int> doubleNumbers = new List<int>(numbers.Count); //double points
-        List<int> tripleNumbers = new List<int>(numbers.Count); //triple points
-        List<int> listOfPoints = new List<int>(); //points
-
-        List<List<int>> combinations = new List<List<int>>();
-        List<List<string>> additionalScenarios = new List<List<string>>();
-        int n = int.Parse(File.ReadAllText(inputFile));
-
-        //get target number
-        //Console.Write("Введіть бажану кількість очок: ");
-
-
-        //simple points
-        for (int i = 1; i <= 20; i++)
+        try
         {
-            numbers.Add(i);
-        }
-        for (int i = 1; i <= 20; i++)
-        {
-            listOfPoints.Add(i);
-        }
-        //double points
-        foreach (int num in numbers)
-        {
-            if (!listOfPoints.Contains(num * 2))
-            { 
-            listOfPoints.Add(num*2);
-            }
-            doubleNumbers.Add(num * 2);
-        }
+            int maxNumbers = 3;
 
-        //triple points
-        foreach (int num in numbers)
-        {
-            if (!listOfPoints.Contains(num * 3))
+            List<int> numbers = new List<int>(); // basic points
+            List<int> doubleNumbers = new List<int>(numbers.Count); //double points
+            List<int> tripleNumbers = new List<int>(numbers.Count); //triple points
+            List<int> listOfPoints = new List<int>(); //points
+
+            List<List<int>> combinations = new List<List<int>>();
+            List<List<string>> additionalScenarios = new List<List<string>>();
+            int n = 0;
+
+            n = int.Parse(File.ReadAllText(inputFile));
+            //The task stated that the maximum score that should be processed should be 200, but after working with the task I came to the conclusion that this is not entirely possible because the last hit should be doubled 
+            if (n > 150)
             {
-                listOfPoints.Add(num * 3);
+                Console.WriteLine("Your score input is too high!");
+                return;
             }
-            tripleNumbers.Add(num * 3);
-        }
-
-        listOfPoints.Add(25);
-        listOfPoints.Add(50);
-
-        FindCombinations(n, new List<int>(), listOfPoints, combinations, maxNumbers);
-
-        using (StreamWriter w = new StreamWriter(outputFile))
-        {
-            foreach (List<int> combination in combinations)
+            for (int i = 1; i <= 20; i++)
             {
-                List<string> formattedCombination = new List<string>();
-                foreach (int num in combination)
+                numbers.Add(i);
+            }
+            for (int i = 1; i <= 20; i++)
+            {
+                listOfPoints.Add(i);
+            }
+            //double points
+            foreach (int num in numbers)
+            {
+                if (!listOfPoints.Contains(num * 2))
                 {
-                    if (doubleNumbers.Contains(num))
+                    listOfPoints.Add(num * 2);
+                }
+                doubleNumbers.Add(num * 2);
+            }
+
+            //triple points
+            foreach (int num in numbers)
+            {
+                if (!listOfPoints.Contains(num * 3))
+                {
+                    listOfPoints.Add(num * 3);
+                }
+                tripleNumbers.Add(num * 3);
+            }
+
+            listOfPoints.Add(25);
+            listOfPoints.Add(50);
+
+            FindCombinations(n, new List<int>(), listOfPoints, combinations, maxNumbers);
+
+            using (StreamWriter w = new StreamWriter(outputFile))
+            {
+                foreach (List<int> combination in combinations)
+                {
+                    List<string> formattedCombination = new List<string>();
+                    foreach (int num in combination)
                     {
-                        formattedCombination.Add($"D{num / 2}");
+                        if (doubleNumbers.Contains(num))
+                        {
+                            formattedCombination.Add($"D{num / 2}");
+                        }
+                        else if (tripleNumbers.Contains(num))
+                        {
+                            formattedCombination.Add($"T{num / 3}");
+                        }
+                        else if (num == 50)
+                        {
+                            formattedCombination.Add($"Bull");
+                        }
+                        else
+                        {
+                            formattedCombination.Add(num.ToString());
+                        }
                     }
-                    else if (tripleNumbers.Contains(num))
+
+                    //Console.WriteLine(string.Join(" ", formattedCombination)); 
+                    string lastVal = formattedCombination[formattedCombination.Count - 1];
+                    if (Regex.IsMatch(lastVal, @"^D\d{1,2}$"))
                     {
-                        formattedCombination.Add($"T{num / 3}");
-                    }
-                    else if (num == 50)
-                    {
-                        formattedCombination.Add($"Bull");
-                    }
-                    else
-                    {
-                        formattedCombination.Add(num.ToString());
+                        additionalScenarios = solveDnTPrioritisation(formattedCombination);
+
+                        //w.WriteLine(string.Join(" ", formattedCombination));
+                        foreach (var a in additionalScenarios)
+                        {
+                            w.WriteLine(string.Join(" ", a));
+                        }
                     }
                 }
-
-                //Console.WriteLine(string.Join(" ", formattedCombination)); 
-                string lastVal = formattedCombination[formattedCombination.Count - 1];
-                if (Regex.IsMatch(lastVal, @"^D\d{1,2}$"))
-                {
-                    additionalScenarios = solveDnTPrioritisation(formattedCombination);
-
-                    //w.WriteLine(string.Join(" ", formattedCombination));
-                    foreach (var a in additionalScenarios)
-                    {
-                        w.WriteLine(string.Join(" ", a));
-                    }
-                }
             }
+            Console.WriteLine("Success");
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+       
     }
 }
